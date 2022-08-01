@@ -56,5 +56,10 @@ namespace HelloWorld
                 }
             }
         }
+
+        private void Awake()
+        {
+            Cursor.visible = true;
+        }
     }
 }
