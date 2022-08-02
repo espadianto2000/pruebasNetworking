@@ -37,7 +37,7 @@ public class playerControls : NetworkBehaviour
     {
         if (IsOwner)
         {
-            spawn = true;
+            SpawnServerRpc();
         }
         
     }
@@ -54,11 +54,6 @@ public class playerControls : NetworkBehaviour
     }
     private void UpdateServer()
     {
-        if (spawn && IsServer)
-        {
-            spawn = false;
-            transform.position = new Vector3(Random.Range(-3f, 3f), 1f, Random.Range(-3f, 3f));
-        }
         rb.MovePosition(new Vector3(transform.position.x + (HoriAxis.Value*0.05f), transform.position.y, transform.position.z + (vertAxis.Value*0.05f)));
         if (flagJump.Value)
         {
@@ -95,7 +90,16 @@ public class playerControls : NetworkBehaviour
         jump();
     }
     
+    [ServerRpc]
+    private void SpawnServerRpc()
+    {
+        Spawn();
+    }
 
+    private void Spawn()
+    {
+        transform.position = new Vector3(Random.Range(-3f, 3f), 1f, Random.Range(-3f, 3f));
+    }
     private void jump()
     {
         rb.velocity = new Vector3(rb.velocity.x, 7.5f, rb.velocity.z);
