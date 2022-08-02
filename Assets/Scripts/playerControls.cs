@@ -23,6 +23,7 @@ public class playerControls : NetworkBehaviour
     private float oldVertAxis;
     private float oldHoriAxis;
     public bool flagGround = false;
+    public bool spawn = false;
     
 
     private void Start()
@@ -30,6 +31,15 @@ public class playerControls : NetworkBehaviour
         rb = GetComponent<Rigidbody>();
         no = GetComponent<NetworkObject>();
         flagJump.Value = false;
+
+    }
+    public override void OnNetworkSpawn()
+    {
+        if (IsOwner)
+        {
+            spawn = true;
+        }
+        
     }
     void FixedUpdate()
     {
@@ -44,6 +54,11 @@ public class playerControls : NetworkBehaviour
     }
     private void UpdateServer()
     {
+        if (spawn)
+        {
+            spawn = false;
+            transform.position = new Vector3(Random.Range(-3f, 3f), 1f, Random.Range(-3f, 3f));
+        }
         rb.MovePosition(new Vector3(transform.position.x + (HoriAxis.Value*0.05f), transform.position.y, transform.position.z + (vertAxis.Value*0.05f)));
         if (flagJump.Value)
         {
