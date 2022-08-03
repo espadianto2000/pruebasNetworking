@@ -1,23 +1,24 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Multiplayer.Samples.Utilities.ClientAuthority;
 using Unity.Netcode;
 using UnityEngine;
 
+[RequireComponent(typeof(NetworkObject))]
+[RequireComponent(typeof(ClientNetworkTransform))]
 public class playerControllerClient : NetworkBehaviour
 {
     public bool flagGround = false;
     public bool spawn = false;
-    Rigidbody rb;
+    public Rigidbody rb;
     public NetworkObject no;
     // Start is called before the first frame update
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        no = GetComponent<NetworkObject>();
     }
     public override void OnNetworkSpawn()
     {
-        if(no.IsLocalPlayer && IsOwner)
+        if(no.IsLocalPlayer && IsOwner && IsClient)
         {
             transform.position = new Vector3(Random.Range(-3f, 3f), 1f, Random.Range(-3f, 3f));
             GameObject.Find("Main Camera").tag = "Untagged";
@@ -32,13 +33,13 @@ public class playerControllerClient : NetworkBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        if (no.IsLocalPlayer && IsOwner)
+        if (no.IsLocalPlayer && IsOwner && IsClient)
         {
             float hori = -Input.GetAxisRaw("Horizontal");
             float vert = Input.GetAxisRaw("Vertical");
 
-            float mHori = Input.GetAxis("Mouse X");
-            float mVert = -Input.GetAxis("Mouse Y");
+            float mHori = Input.GetAxisRaw("Mouse X");
+            float mVert = -Input.GetAxisRaw("Mouse Y");
 
             rb.MovePosition(transform.position + (transform.forward * hori * 0.05f) + (transform.right * vert * 0.05f));
             if (Input.GetKey(KeyCode.Space) && flagGround)
@@ -52,6 +53,13 @@ public class playerControllerClient : NetworkBehaviour
 
             var c = transform.GetChild(0);
             c.Rotate(mVert * 10f, 0, 0);
+        }
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.transform.CompareTag("suelo"))
+        {
+            flagGround = true;
         }
     }
 }
