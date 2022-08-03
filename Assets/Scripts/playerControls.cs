@@ -17,11 +17,15 @@ public class playerControls : NetworkBehaviour
     [SerializeField]
     private NetworkVariable<bool> flagJump = new NetworkVariable<bool>();
 
+    [SerializeField]
+    private NetworkVariable<float> MouseHoriAxis = new NetworkVariable<float>();
     
 
     //client caching
     private float oldVertAxis;
     private float oldHoriAxis;
+    private float oldMouseHoriAxis;
+
     public bool flagGround = false;
     public bool spawn = false;
     
@@ -31,15 +35,17 @@ public class playerControls : NetworkBehaviour
         rb = GetComponent<Rigidbody>();
         no = GetComponent<NetworkObject>();
         flagJump.Value = false;
-
+        
     }
     public override void OnNetworkSpawn()
     {
         if (IsOwner)
         {
             SpawnServerRpc();
+            GameObject.Find("Main Camera").SetActive(false);
+            transform.GetChild(0).gameObject.SetActive(true);
+            Cursor.lockState = CursorLockMode.Locked;
         }
-        
     }
     void FixedUpdate()
     {
@@ -54,21 +60,32 @@ public class playerControls : NetworkBehaviour
     }
     private void UpdateServer()
     {
-        rb.MovePosition(new Vector3(transform.position.x + (HoriAxis.Value*0.05f), transform.position.y, transform.position.z + (vertAxis.Value*0.05f)));
+        //rb.MovePosition(new Vector3(transform.position.x + (HoriAxis.Value*0.05f), transform.position.y, transform.position.z + (vertAxis.Value*0.05f)));
+        rb.MovePosition(transform.position + (transform.forward * HoriAxis.Value * 0.05f) + (transform.right * vertAxis.Value * 0.05f));
         if (flagJump.Value)
         {
             jump();
         }
+        var p = transform;
+        p.Rotate(0, MouseHoriAxis.Value * 10f, 0);
     }
     private void UpdateClient()
     {
-        float hori = Input.GetAxisRaw("Horizontal");
+        float hori = -Input.GetAxisRaw("Horizontal");
         float vert = Input.GetAxisRaw("Vertical");
+
+        float mHori = Input.GetAxis("Mouse X");
+
         if(oldHoriAxis != hori || oldVertAxis != vert)
         {
             oldHoriAxis = hori;
             oldVertAxis = vert;
         }
+        if(oldMouseHoriAxis !=mHori)
+        {
+            oldMouseHoriAxis = mHori;
+        }
+        updateClientRotatioServerRpc(mHori);
         updateClientPositionServerRpc(hori, vert);
         if(Input.GetKey(KeyCode.Space) && flagGround)
         {
@@ -82,6 +99,11 @@ public class playerControls : NetworkBehaviour
     {
         HoriAxis.Value = h;
         vertAxis.Value = v;
+    }
+    [ServerRpc]
+    private void updateClientRotatioServerRpc(float h)
+    {
+        MouseHoriAxis.Value = h;
     }
 
     [ServerRpc]
