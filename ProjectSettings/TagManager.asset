@@ -5,11 +5,13 @@ TagManager:
   serializedVersion: 2
   tags:
   - suelo
+  - ojo
+  - cabeza
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - notForMe
   - Water
   - UI
   - 

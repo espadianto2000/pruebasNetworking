@@ -12,6 +12,10 @@ public class playerControllerClient : NetworkBehaviour
     public bool spawn = false;
     public Rigidbody rb;
     public NetworkObject no;
+    public GameObject cameraClient;
+    public GameObject[] elementosAOcultar;
+    float yRotate;
+    public GameObject[] ojos;
     // Start is called before the first frame update
     void Start()
     {
@@ -23,10 +27,26 @@ public class playerControllerClient : NetworkBehaviour
             transform.position = new Vector3(Random.Range(-3f, 3f), 1f, Random.Range(-3f, 3f));
             GameObject.Find("Main Camera").tag = "Untagged";
             GameObject.Find("Main Camera").SetActive(false);
-            transform.GetChild(0).gameObject.SetActive(true);
-            transform.GetChild(0).tag = "MainCamera";
-            transform.GetChild(0).GetComponent<AudioListener>().enabled = true;
+            cameraClient.SetActive(true);
+            cameraClient.tag = "MainCamera";
+            cameraClient.GetComponent<AudioListener>().enabled = true;
             Cursor.lockState = CursorLockMode.Locked;
+            int LayerIgnoreRaycast = LayerMask.NameToLayer("notForMe");
+            foreach(GameObject eo in elementosAOcultar)
+            {
+                eo.layer = LayerIgnoreRaycast;
+                if(eo.tag == "cabeza")
+                {
+                    eo.GetComponent<ballBehaviour>().enabled = true;
+                    eo.tag = "Untagged";
+                }
+            }
+            foreach(GameObject ojo in ojos)
+            {
+                ojo.layer = LayerIgnoreRaycast;
+                ojo.tag = "Untagged";
+            }
+            
         }
     }
 
@@ -49,10 +69,13 @@ public class playerControllerClient : NetworkBehaviour
             }
 
             var p = transform;
-            p.Rotate(0, mHori * 10f, 0);
+            p.Rotate(0, mHori * 5f, 0);
 
             var c = transform.GetChild(0);
-            c.Rotate(mVert * 10f, 0, 0);
+
+            yRotate += mVert * Time.fixedDeltaTime * 125f;
+            yRotate = Mathf.Clamp(yRotate, -80f, 80f);
+            c.eulerAngles = new Vector3(yRotate, c.eulerAngles.y, c.eulerAngles.z);
         }
     }
     private void OnCollisionEnter(Collision collision)
